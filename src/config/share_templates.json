@@ -1,0 +1,59 @@
+{
+    "templates": {
+        "profitable": {
+            "zh": "我的资产近期增长了 {change_percent}%！🚀 正在使用 SmartFolio 监控我的 {chains} 组合，全本地存储，安全感爆棚。",
+            "en": "My portfolio grew {change_percent}% recently! 🚀 Using SmartFolio to track my {chains} assets with full local storage security."
+        },
+        "general": {
+            "zh": "终于找到一款不碰私钥、完全自托管的资产管家。这是我的多链配置比例，快来试试 SmartFolio 吧！",
+            "en": "Found the perfect self-custody portfolio tracker. Check out my multi-chain allocation with SmartFolio!"
+        },
+        "loss": {
+            "zh": "市场波动中保持冷静 📊 SmartFolio 让我清楚看到每一个链上资产的变化，助我做出更好的决策。",
+            "en": "Staying calm in market volatility 📊 SmartFolio helps me track every on-chain movement for better decisions."
+        }
+    },
+    "hashtags": {
+        "default": [
+            "#SmartFolio",
+            "#CryptoPortfolio",
+            "#Web3"
+        ],
+        "profitable": [
+            "#CryptoWin",
+            "#HODL",
+            "#ToTheMoon"
+        ],
+        "general": [
+            "#SelfCustody",
+            "#DeFi",
+            "#CryptoTracking"
+        ]
+    },
+    "platforms": {
+        "twitter": {
+            "maxLength": 280,
+            "imageSize": [
+                800,
+                418
+            ]
+        },
+        "facebook": {
+            "imageSize": [
+                1200,
+                630
+            ]
+        },
+        "whatsapp": {
+            "imageSize": [
+                800,
+                600
+            ]
+        }
+    },
+    "branding": {
+        "watermarkText": "SmartFolio",
+        "websiteUrl": "https://smartfolio.app",
+        "downloadUrl": "https://chrome.google.com/webstore"
+    }
+}

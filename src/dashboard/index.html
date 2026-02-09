@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Dashboard</title>
+    <style>
+        /* Tab Navigation Styles */
+        .tab-nav {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: #3b82f6;
+        }
+
+        .tab-btn.active {
+            color: #3b82f6;
+            font-weight: 700;
+            background: linear-gradient(to bottom, #eff6ff, #ffffff);
+            border-bottom-color: #3b82f6;
+            box-shadow: 0 -2px 8px rgba(59, 130, 246, 0.15);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Collapsible Section */
+        .collapsible-header {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible-header .chevron {
+            transition: transform 0.2s;
+        }
+
+        .collapsible-header.collapsed .chevron {
+            transform: rotate(-90deg);
+        }
+
+        .collapsible-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .collapsible-content.collapsed {
+            max-height: 0 !important;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen text-gray-800 font-sans">
+    <div id="app" class="max-w-6xl mx-auto p-6">
+        <!-- Header with Tab Navigation -->
+        <header class="mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
+                    <img src="assets/icon48.png" alt="Logo" class="w-8 h-8">
+                    <span data-i18n="appTitle">SmartFolio</span>
+                    <span
+                        class="bg-gradient-to-r from-emerald-500 to-blue-600 bg-clip-text text-transparent text-sm font-bold ml-3 tracking-wider uppercase"
+                        style="text-shadow: 0px 1px 2px rgba(0,0,0,0.05);">PRIVATE · UNIFIED · SMART</span>
+                </h1>
+                <div class="flex gap-2">
+                    <button id="btn-share"
+                        class="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 shadow-sm transition"
+                        title="Share Portfolio">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="18" cy="5" r="3"></circle>
+                            <circle cx="6" cy="12" r="3"></circle>
+                            <circle cx="18" cy="19" r="3"></circle>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                        </svg>
+                        Share
+                    </button>
+                    <button id="btn-update"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm transition"
+                        data-i18n="updateAll">Update All</button>
+                </div>
+            </div>
+            <!-- Tab Navigation -->
+            <div class="tab-nav">
+                <button id="tab-btn-dashboard" class="tab-btn active" data-tab="dashboard">Dashboard</button>
+                <button id="tab-btn-settings" class="tab-btn" data-tab="settings" data-i18n="settings">Settings</button>
+            </div>
+        </header>
+
+        <!-- ==================== TAB: DASHBOARD ==================== -->
+        <div id="tab-dashboard" class="tab-content active">
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Left: Portfolio Allocation with Total Balance in center -->
+                <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="text-sm font-medium text-gray-500 uppercase mb-4" data-i18n="allocation">Portfolio
+                        Allocation
+                    </h3>
+                    <div class="relative h-64 w-full flex items-center justify-center">
+                        <canvas id="allocation-chart"></canvas>
+                        <!-- Total Balance overlay in center of pie chart -->
+                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div class="text-center">
+                                <p class="text-xs text-gray-500 uppercase" data-i18n="totalBalance">Total Balance</p>
+                                <p class="text-2xl font-bold text-gray-900" id="total-balance">$0.00</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p id="last-update-time" class="text-xs text-gray-400 text-center mt-2">Last updated: --</p>
+                    <!-- Chain Type Legend -->
+                    <div id="chain-legend" class="mt-4 grid grid-cols-2 gap-2 text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full" style="background:#F7931A"></span>
+                            <span>BTC</span>
+                            <span id="legend-btc" class="text-gray-500 ml-auto">0 (0%)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full" style="background:#627EEA"></span>
+                            <span>EVM</span>
+                            <span id="legend-evm" class="text-gray-500 ml-auto">0 (0%)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full" style="background:#14F195"></span>
+                            <span>SOL</span>
+                            <span id="legend-sol" class="text-gray-500 ml-auto">0 (0%)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full" style="background:#8B5CF6"></span>
+                            <span>CEX</span>
+                            <span id="legend-cex" class="text-gray-500 ml-auto">0 (0%)</span>
+                        </div>
+                    </div>
+
+                    <!-- Portfolio Stats Cards (Popup-style) -->
+                    <div class="mt-6 grid grid-cols-3 gap-2">
+                        <div class="rounded-lg px-3 py-3 text-center bg-gray-50 border border-gray-100">
+                            <p class="text-gray-500 text-xs mb-1">On-chain</p>
+                            <p class="text-xl font-bold text-gray-900" id="stat-onchain">0</p>
+                        </div>
+                        <div class="rounded-lg px-3 py-3 text-center bg-gray-50 border border-gray-100">
+                            <p class="text-gray-500 text-xs mb-1">CEX</p>
+                            <p class="text-xl font-bold text-gray-900" id="stat-cex">0</p>
+                        </div>
+                        <div class="rounded-lg px-3 py-3 text-center bg-gray-50 border border-gray-100">
+                            <p class="text-gray-500 text-xs mb-1">Since Last</p>
+                            <p class="text-xl font-bold" id="stat-since-last">$0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Portfolio Analysis Card -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-sm font-medium text-gray-500 uppercase" data-i18n="portfolioAnalysis">Portfolio
+                            Analysis</h3>
+                        <div class="flex items-center gap-2">
+                            <select id="analysis-model"
+                                class="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-blue-500 focus:border-blue-500">
+                                <optgroup label="OpenRouter">
+                                    <option value="openrouter:google/gemini-2.0-flash-001" selected>Gemini 2.0 Flash -
+                                        OpenRouter
+                                    </option>
+                                    <option value="openrouter:openai/gpt-4o-mini">GPT-4o Mini - OpenRouter</option>
+                                    <option value="openrouter:anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet -
+                                        OpenRouter
+                                    </option>
+                                </optgroup>
+                                <optgroup label="SiliconFlow">
+                                    <option value="siliconflow:Qwen/Qwen2-VL-72B-Instruct">Qwen2-VL-72B - SiliconFlow
+                                    </option>
+                                    <option value="siliconflow:Pro/Qwen/Qwen2-VL-72B-Instruct">Qwen2-VL-72B Pro -
+                                        SiliconFlow
+                                    </option>
+                                    <option value="siliconflow:THUDM/glm-4v-9b">GLM-4V-9B - SiliconFlow</option>
+                                </optgroup>
+                            </select>
+                            <button id="btn-analyze"
+                                class="px-3 py-1 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition"
+                                data-i18n="analyze">Analyze</button>
+                        </div>
+                    </div>
+                    <input type="text" id="analysis-prompt"
+                        class="w-full text-xs border border-gray-300 rounded px-3 py-2 mb-3 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Enter custom analysis prompt...">
+                    <div id="analysis-result" class="text-sm text-gray-600 min-h-[100px] bg-gray-50 rounded-lg p-3">
+                        <p class="text-gray-400 italic" data-i18n="analyzePlaceholder">Click "Analyze" to get AI
+                            insights...
+                        </p>
+                    </div>
+                    <!-- Quick Prompts -->
+                    <div class="mt-3">
+                        <p class="text-xs text-gray-500 mb-2" data-i18n="quickPrompts">Quick Prompts:</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button
+                                class="quick-prompt-btn px-3 py-1.5 bg-gray-100 hover:bg-blue-100 text-gray-700 text-xs rounded-full border border-gray-200 transition"
+                                data-i18n="promptRiskAssessment">
+                                Risk Assessment
+                            </button>
+                            <button
+                                class="quick-prompt-btn px-3 py-1.5 bg-gray-100 hover:bg-blue-100 text-gray-700 text-xs rounded-full border border-gray-200 transition"
+                                data-i18n="promptOptimize">
+                                Optimize Allocation
+                            </button>
+                            <button
+                                class="quick-prompt-btn px-3 py-1.5 bg-gray-100 hover:bg-blue-100 text-gray-700 text-xs rounded-full border border-gray-200 transition"
+                                data-i18n="promptMarket">
+                                Market Trend Analysis
+                            </button>
+                            <button
+                                class="quick-prompt-btn px-3 py-1.5 bg-gray-100 hover:bg-blue-100 text-gray-700 text-xs rounded-full border border-gray-200 transition"
+                                data-i18n="promptRebalance">
+                                Rebalancing Strategy
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Optimization Suggestions (hidden by default, shown after AI analysis) -->
+                    <div id="optimization-suggestions-section" class="mt-3 hidden">
+                        <p class="text-xs text-gray-500 font-semibold mb-2" data-i18n="optimizationSuggestions">
+                            Optimization
+                            Suggestions:</p>
+                        <div id="optimization-suggestions-content" class="space-y-2">
+                            <!-- Dynamic content rendered by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== ASSET HEALTH ANALYSIS ==================== -->
+            <div id="asset-health-section" class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold flex items-center gap-2">
+                        <span class="text-2xl">🩺</span>
+                        <span data-i18n="assetHealthAnalysis">Asset Health Analysis</span>
+                    </h3>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Card 1: On-chain Risk -->
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-semibold text-sm flex items-center gap-2">
+                                <span>📊</span>
+                                <span data-i18n="onChainRisk">On-chain Risk</span>
+                            </h4>
+                            <span id="tiering-health-level"
+                                class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 font-medium">
+                                Safe
+                            </span>
+                        </div>
+                        <div class="space-y-3">
+                            <!-- BTC -->
+                            <div class="flex items-center gap-3">
+                                <span class="text-lg">₿</span>
+                                <div class="flex-1">
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span>BTC</span>
+                                        <span id="tier1-value" class="font-medium">$0 (0%)</span>
+                                    </div>
+                                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                        <div id="tier1-bar" class="h-full bg-orange-500 transition-all"
+                                            style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- EVM & SOL -->
+                            <div class="flex items-center gap-3">
+                                <span class="text-lg">⛓️</span>
+                                <div class="flex-1">
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span>EVM & SOL</span>
+                                        <span id="tier2-value" class="font-medium">$0 (0%)</span>
+                                    </div>
+                                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                        <div id="tier2-bar" class="h-full bg-blue-500 transition-all" style="width: 0%">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- CEX -->
+                            <div class="flex items-center gap-3">
+                                <span class="text-lg">🏦</span>
+                                <div class="flex-1">
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span>CEX</span>
+                                        <span id="tier3-value" class="font-medium">$0 (0%)</span>
+                                    </div>
+                                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                        <div id="tier3-bar" class="h-full bg-purple-500 transition-all"
+                                            style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Concentration Gauge -->
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-semibold text-sm flex items-center gap-2">
+                                <span>⚠️</span>
+                                <span data-i18n="concentrationRisk">Concentration Risk</span>
+                            </h4>
+                            <span id="concentration-level"
+                                class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 font-medium">
+                                Safe
+                            </span>
+                        </div>
+                        <!-- Gauge Bar -->
+                        <div class="relative h-6 rounded-full overflow-hidden bg-gray-200 mb-2">
+                            <div class="absolute inset-0 flex">
+                                <div id="concentration-bar-safe" class="bg-green-400" style="width: 50%;"></div>
+                                <div id="concentration-bar-warning" class="bg-yellow-400" style="width: 20%;"></div>
+                                <div id="concentration-bar-danger" class="bg-red-400" style="width: 30%;"></div>
+                            </div>
+                            <div id="concentration-needle" class="absolute top-0 h-full w-1 bg-gray-800 transition-all"
+                                style="left: 0%;">
+                                <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-gray-800 rotate-45">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500 mb-4">
+                            <span>0%</span>
+                            <span id="concentration-warning-label">50%</span>
+                            <span id="concentration-danger-label">70%</span>
+                            <span>100%</span>
+                        </div>
+                        <!-- Max Wallet Info -->
+                        <div class="text-center">
+                            <p id="concentration-percent" class="text-3xl font-bold text-gray-700">0%</p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                <span data-i18n="maxWallet">Largest Wallet</span>:
+                                <span id="concentration-max-wallet" class="font-medium">--</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Storage Distribution -->
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-semibold text-sm flex items-center gap-2">
+                                <span>🔐</span>
+                                <span data-i18n="storageDistribution">Storage Distribution</span>
+                            </h4>
+                            <span id="storage-security-level"
+                                class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 font-medium">
+                                Safe
+                            </span>
+                        </div>
+                        <div class="space-y-3">
+                            <!-- Cold Wallet -->
+                            <div class="flex items-center gap-3">
+                                <span class="text-lg">🧊</span>
+                                <div class="flex-1">
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span data-i18n="coldWallet">Cold/Hardware</span>
+                                        <span id="storage-cold-value" class="font-medium">$0 (0%)</span>
+                                    </div>
+                                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                        <div id="storage-cold-bar" class="h-full bg-green-500 transition-all"
+                                            style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Hot Wallet -->
+                            <div class="flex items-center gap-3">
+                                <span class="text-lg">🔥</span>
+                                <div class="flex-1">
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span data-i18n="hotWallet">Hot/Software</span>
+                                        <span id="storage-hot-value" class="font-medium">$0 (0%)</span>
+                                    </div>
+                                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                        <div id="storage-hot-bar" class="h-full bg-yellow-500 transition-all"
+                                            style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- CEX -->
+                            <div class="flex items-center gap-3">
+                                <span class="text-lg">🏦</span>
+                                <div class="flex-1">
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span data-i18n="cexStorage">CEX Custody</span>
+                                        <span id="storage-cex-value" class="font-medium">$0 (0%)</span>
+                                    </div>
+                                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                        <div id="storage-cex-bar" class="h-full bg-red-500 transition-all"
+                                            style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Trend Analysis Section -->
+            <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Total Trend -->
+                <div class="bg-white rounded-2xl shadow-sm p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold text-gray-900" data-i18n="totalAssetTrend">Total Asset Trend
+                        </h2>
+                    </div>
+                    <div class="relative h-64">
+                        <canvas id="trend-total-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Detailed Trend -->
+                <div class="bg-white rounded-2xl shadow-sm p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4" data-i18n="detailedTrend">Detailed Trend (Top
+                        10)</h2>
+                    <div class="relative h-64">
+                        <canvas id="trend-detail-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Wallet List - Full Width -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold" data-i18n="wallets">Wallets</h3>
+                    <button id="btn-export-csv"
+                        class="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium px-3 py-1.5 bg-blue-50 hover:bg-blue-100 rounded-lg transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        <span data-i18n="exportCsv">Export CSV</span>
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                    data-sort="chain" data-i18n="chainCategory">
+                                    Chain/Category <span class="sort-icon ml-1">↕</span>
+                                </th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                    data-sort="remark" data-i18n="addressRemark">
+                                    Address/Remark <span class="sort-icon ml-1">↕</span>
+                                </th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                    data-sort="balance" data-i18n="balance">
+                                    Balance <span class="sort-icon ml-1">↓</span>
+                                </th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                    data-sort="status" data-i18n="status">
+                                    Status <span class="sort-icon ml-1">↕</span>
+                                </th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                    data-sort="source" data-i18n="source">
+                                    Source <span class="sort-icon ml-1">↕</span>
+                                </th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                    data-sort="updated">
+                                    Updated <span class="sort-icon ml-1">↕</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="wallet-list-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Rows inserted by JS -->
+                            <tr>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500" colspan="6">No wallets
+                                    added. Please configure settings.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Screenshot Preview Panel -->
+            <div id="screenshot-panel" class="mt-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100 hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold">Screenshot Preview</h3>
+                    <span id="screenshot-status" class="text-sm text-gray-500">Processing...</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="relative bg-gray-100 rounded-lg overflow-hidden">
+                        <p class="text-xs text-gray-500 p-2">Full Screenshot</p>
+                        <img id="screenshot-preview" src="" alt="Full Screenshot" class="w-full h-auto object-contain"
+                            style="max-height: 300px;">
+                    </div>
+                    <div class="relative bg-gray-100 rounded-lg overflow-hidden">
+                        <p class="text-xs text-gray-500 p-2">Cropped (Top-Right for OCR)</p>
+                        <img id="screenshot-cropped" src="" alt="Cropped Screenshot"
+                            class="w-full h-auto object-contain" style="max-height: 300px;">
+                    </div>
+                </div>
+                <p id="screenshot-address" class="mt-2 text-sm text-gray-500 font-mono"></p>
+            </div>
+
+
+
+            <!-- Screenshot Gallery - Collapsible -->
+            <div id="screenshot-gallery" class="mt-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <div class="collapsible-header collapsed flex justify-between items-center mb-4"
+                    id="screenshot-gallery-header">
+                    <div class="flex items-center gap-2">
+                        <svg class="chevron w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                            </path>
+                        </svg>
+                        <h3 class="text-lg font-bold" data-i18n="screenshotHistory">Screenshot History</h3>
+                    </div>
+                    <button id="btn-clear-screenshots" class="text-sm text-red-500 hover:text-red-700"
+                        data-i18n="clearAll">Clear All</button>
+                </div>
+                <div id="gallery-grid" class="collapsible-content collapsed grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Gallery items will be inserted here by JS -->
+                    <p class="text-sm text-gray-400 col-span-full">No screenshots yet. Click "Update All" to capture.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB: SETTINGS ==================== -->
+        <div id="tab-settings" class="tab-content">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-start mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900" data-i18n="settings">Settings</h2>
+
+                    <!-- Auto-save indicator (Moved to Top) -->
+                    <div
+                        class="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200">
+                        <svg id="save-indicator" class="w-3 h-3 text-green-500 hidden" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7">
+                            </path>
+                        </svg>
+                        <span id="save-status">Settings auto-save on change</span>
+                    </div>
+                </div>
+
+                <!-- Language Toggle - Hidden for now, i18n files preserved for future use -->
+                <div class="mb-6 pb-4 border-b border-gray-200 hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Language / 语言</label>
+                    <select id="language-select"
+                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="en" selected>English</option>
+                        <option value="cn">中文</option>
+                    </select>
+                    <p class="text-xs text-blue-500 mt-2">All Data Stored locally in browser.</p>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Section 1: Wallet Settings -->
+                    <div>
+                        <h3 class="text-base font-bold text-gray-800 mb-3">1. Wallet Settings</h3>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-sm font-medium text-gray-700">Wallets (Address, Chain,
+                                Remark, Type)</label>
+                            <a href="assets/demo_wallets.csv" download
+                                class="text-xs text-blue-600 hover:text-blue-800">
+                                ⬇ Download Template
+                            </a>
+                        </div>
+                        <div class="bg-blue-50 border border-blue-200 rounded-md px-3 py-2 mb-2">
+                            <p class="text-xs text-gray-700 mb-1">
+                                <strong>Chain:</strong> <code class="text-xs bg-white px-1 py-0.5 rounded">evm</code>,
+                                <code class="text-xs bg-white px-1 py-0.5 rounded">sol</code>,
+                                <code class="text-xs bg-white px-1 py-0.5 rounded">btc</code>, or
+                                <code class="text-xs bg-white px-1 py-0.5 rounded">cex</code>
+                            </p>
+                            <p class="text-xs text-gray-700">
+                                <strong>Type:</strong> <code class="text-xs bg-white px-1 py-0.5 rounded">hot</code>
+                                (default),
+                                <code class="text-xs bg-white px-1 py-0.5 rounded">cold</code>, or
+                                <code class="text-xs bg-white px-1 py-0.5 rounded">cex</code>
+                            </p>
+                        </div>
+                        <div class="flex gap-2 mb-2">
+                            <input type="file" id="wallets-file-upload" accept=".csv,.txt"
+                                class="text-xs text-gray-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                        </div>
+                        <textarea id="wallets-csv" rows="5"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border font-mono"
+                            placeholder="0x123..., evm, My Wallet, hot&#10;..."></textarea>
+                        <p id="wallet-error" class="hidden text-red-500 text-xs mt-1"></p>
+                    </div>
+
+                    <!-- Section 2: AI API Key -->
+                    <div class="border-t pt-4 mt-4">
+                        <h3 class="text-base font-bold text-gray-800 mb-3">2. AI API Key</h3>
+                        <p class="text-xs text-gray-500 mb-3">Used for OCR and portfolio analysis. Choose one provider:
+                        </p>
+
+                        <!-- API Provider Selection -->
+                        <div class="flex gap-6 mb-3">
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="radio" name="ai-provider" value="openrouter" id="ai-provider-openrouter"
+                                    checked class="text-blue-600 focus:ring-blue-500">
+                                <span>OpenRouter</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="radio" name="ai-provider" value="siliconflow" id="ai-provider-siliconflow"
+                                    class="text-blue-600 focus:ring-blue-500">
+                                <span>SiliconFlow</span>
+                            </label>
+                        </div>
+
+                        <!-- OpenRouter API Key (shown when openrouter selected) -->
+                        <div id="openrouter-key-section">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">OpenRouter API Key</label>
+                            <p class="text-xs text-gray-500 mb-2">Get one at <a href="https://openrouter.ai/keys"
+                                    target="_blank" class="text-blue-500 hover:underline">openrouter.ai/keys</a></p>
+                            <input type="password" id="openrouter-api-key" placeholder="sk-or-..."
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                            <p id="openrouter-error" class="hidden text-red-500 text-xs mt-1"></p>
+                        </div>
+
+                        <!-- SiliconFlow API Key (shown when siliconflow selected) -->
+                        <div id="siliconflow-key-section" style="display: none;">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">SiliconFlow API Key</label>
+                            <p class="text-xs text-gray-500 mb-2">Get one at <a
+                                    href="https://cloud.siliconflow.cn/account/ak" target="_blank"
+                                    class="text-blue-500 hover:underline">cloud.siliconflow.cn</a></p>
+                            <input type="password" id="siliconflow-api-key" placeholder="sk-..."
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                            <p id="siliconflow-error" class="hidden text-red-500 text-xs mt-1"></p>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: EVM Data Source -->
+                    <div class="border-t pt-4 mt-4">
+                        <h3 class="text-base font-bold text-gray-800 mb-3">3. EVM Data Source</h3>
+                        <div class="flex gap-6 mb-3">
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="radio" name="evm-source" value="debank" id="evm-source-debank" checked
+                                    class="text-blue-600 focus:ring-blue-500">
+                                <span>Snapshot Mode (DeBank)</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="radio" name="evm-source" value="etherscan" id="evm-source-etherscan"
+                                    class="text-blue-600 focus:ring-blue-500">
+                                <span>Standard API (Etherscan)</span>
+                            </label>
+                        </div>
+                        <!-- Etherscan API Key (shown when etherscan selected) -->
+                        <div id="etherscan-key-section">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Etherscan API Key</label>
+                            <p class="text-xs text-gray-500 mb-2">Get free key at <a href="https://etherscan.io/apis"
+                                    target="_blank" class="text-blue-500 hover:underline">etherscan.io/apis</a></p>
+                            <div class="flex gap-2">
+                                <input type="text" id="etherscan-api-key" placeholder="Your Etherscan API Key"
+                                    class="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                            </div>
+                            <p id="etherscan-error" class="hidden text-red-500 text-xs mt-1"></p>
+                            <!-- Test Section -->
+                            <div class="mt-3 p-3 bg-gray-50 rounded-lg">
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Test Wallet Address
+                                    (EVM)</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="etherscan-test-wallet" placeholder="0x..."
+                                        value="0xd8da6bf26964af9d7eed9e03e53415d37aa96045"
+                                        class="flex-1 px-3 py-1.5 text-sm rounded border border-gray-300 focus:ring-1 focus:ring-blue-500">
+                                    <button id="btn-test-etherscan" type="button"
+                                        class="px-4 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Test
+                                    </button>
+                                </div>
+                                <p id="etherscan-test-result" class="text-xs mt-2 hidden"></p>
+                            </div>
+                        </div>
+                        <!-- DeBank Delay (shown when debank selected) -->
+                        <div id="debank-delay-section" style="display: none;">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">DeBank Snapshot Delay
+                                (ms)</label>
+                            <p class="text-xs text-gray-500 mb-2">Wait time before taking snapshot. Default: 3000ms
+                            </p>
+                            <input type="number" id="debank-delay" placeholder="3000" min="1000" step="500" value="3000"
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        </div>
+                    </div>
+
+                    <!-- Section 4: SOL Data Source -->
+                    <div class="border-t pt-4 mt-4">
+                        <h3 class="text-base font-bold text-gray-800 mb-3">4. SOL Data Source</h3>
+                        <div class="flex gap-6 mb-3">
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="radio" name="sol-source" value="jup" id="sol-source-jup" checked
+                                    class="text-blue-600 focus:ring-blue-500">
+                                <span>Jup.ag Snapshot</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="radio" name="sol-source" value="helius" id="sol-source-helius"
+                                    class="text-blue-600 focus:ring-blue-500">
+                                <span>Helius RPC</span>
+                            </label>
+                        </div>
+                        <!-- Solana RPC URL (shown when helius selected) -->
+                        <div id="solana-rpc-section">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Solana RPC URL</label>
+                            <p class="text-xs text-gray-500 mb-2">Get one at <a href="https://www.helius.dev/"
+                                    target="_blank" class="text-blue-500 hover:text-blue-700">helius.dev</a></p>
+                            <div class="flex gap-2">
+                                <input type="text" id="custom-solana-rpc"
+                                    placeholder="https://mainnet.helius-rpc.com/?api-key=..."
+                                    class="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                            </div>
+                            <p id="solana-error" class="hidden text-red-500 text-xs mt-1"></p>
+                            <!-- Test Section -->
+                            <div class="mt-3 p-3 bg-gray-50 rounded-lg">
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Test Wallet Address
+                                    (Solana)</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="solana-test-wallet" placeholder="..."
+                                        value="7HYYmzgpbpNBnopJspA4m8qc1N78AzsS7P6DsnUxutRp"
+                                        class="flex-1 px-3 py-1.5 text-sm rounded border border-gray-300 focus:ring-1 focus:ring-blue-500">
+                                    <button id="btn-test-solana" type="button"
+                                        class="px-4 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Test
+                                    </button>
+                                </div>
+                                <p id="solana-test-result" class="text-xs mt-2 hidden"></p>
+                            </div>
+                        </div>
+                        <!-- Jup.ag Delay (shown when jup selected) -->
+                        <div id="jup-delay-section" style="display: none;">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Jup.ag Snapshot Delay
+                                (ms)</label>
+                            <p class="text-xs text-gray-500 mb-2">Wait time before taking snapshot. Default: 3000ms
+                            </p>
+                            <input type="number" id="jup-delay" placeholder="3000" min="1000" step="500" value="3000"
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        </div>
+                    </div>
+
+                    <!-- Section 5: CEX Data Source -->
+                    <div class="border-t pt-4 mt-4">
+                        <h3 class="text-base font-bold text-gray-800 mb-3">5. CEX Data Source</h3>
+                        <p class="text-xs text-gray-500 mb-3">Add exchange API keys to fetch CEX balances. Supports
+                            multiple
+                            accounts.</p>
+
+                        <!-- CEX Account Form -->
+                        <div class="bg-gray-50 rounded-lg p-3 mb-3">
+                            <div class="grid grid-cols-2 gap-2 mb-2">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Exchange</label>
+                                    <select id="cex-name"
+                                        class="w-full px-3 py-1.5 text-sm rounded border border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                        <option value="binance">Binance (Spot)</option>
+                                        <option value="okx">OKX (Trading + Funding + Savings)</option>
+                                        <option value="bybit">Bybit (Unified + Funding + Earn)</option>
+                                        <option value="bitget">Bitget (Spot + Earn)</option>
+                                        <option value="backpack">Backpack (Collateral)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Wallet Name</label>
+                                    <input type="text" id="cex-remark" placeholder="e.g., Main Trading"
+                                        class="w-full px-3 py-1.5 text-sm rounded border border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="block text-xs font-medium text-gray-600 mb-1">API Key</label>
+                                <p class="text-xs text-orange-500 mb-1">⚠️ Only add Read-Only API keys for security</p>
+                                <input type="text" id="cex-api-key" placeholder="Your API Key"
+                                    class="w-full px-3 py-1.5 text-sm rounded border border-gray-300 focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div class="mb-2">
+                                <label class="block text-xs font-medium text-gray-600 mb-1">API Secret</label>
+                                <input type="password" id="cex-api-secret" placeholder="Your API Secret"
+                                    class="w-full px-3 py-1.5 text-sm rounded border border-gray-300 focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div class="mb-2" id="cex-passphrase-section">
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Passphrase <span
+                                        class="text-gray-400">(OKX/Bitget only)</span></label>
+                                <input type="password" id="cex-passphrase" placeholder="Your Passphrase"
+                                    class="w-full px-3 py-1.5 text-sm rounded border border-gray-300 focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <button type="button" id="btn-add-cex"
+                                class="w-full px-3 py-1.5 bg-green-600 text-white rounded text-sm font-medium hover:bg-green-700">
+                                + Add CEX Account
+                            </button>
+                        </div>
+
+                        <!-- CEX Accounts List -->
+                        <div id="cex-accounts-list" class="space-y-2">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Section 6: Data Storage -->
+                    <div class="border-t pt-4 mt-4">
+                        <h3 class="text-base font-bold text-gray-800 mb-3" data-i18n="configStorage">Configuration
+                            Storage</h3>
+                        <p class="text-xs text-blue-600 mb-2">Enable profile sync to share settings across devices. Make
+                            sure your Chrome profile has sync enabled and supports extension sync.</p>
+                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="checkbox" id="enable-cloud-sync"
+                                            class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
+                                        <span class="text-sm font-medium text-gray-700"
+                                            data-i18n="enableProfileSync">Enable Profile Sync</span>
+                                    </label>
+                                    <p class="text-xs text-gray-500 mt-1 ml-6">
+                                        <span data-i18n="syncDescription">Sync Settings & Wallets across devices (Max
+                                            100KB).</span>
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <span id="sync-status"
+                                        class="text-xs font-mono px-2 py-1 rounded bg-gray-200 text-gray-600"
+                                        data-i18n="localOnly">Local Only</span>
+                                </div>
+                            </div>
+
+                            <!-- Sync Sub-options -->
+                            <div id="sync-options" class="ml-6 mb-3 hidden">
+                                <p class="text-xs text-gray-600 mb-2">Select data to sync:</p>
+                                <div class="flex flex-wrap gap-3 text-xs">
+                                    <label class="flex items-center gap-1 cursor-pointer">
+                                        <input type="checkbox" id="sync-wallets" checked
+                                            class="w-3 h-3 text-blue-600 rounded">
+                                        <span class="text-gray-700">Wallets</span>
+                                    </label>
+                                    <label class="flex items-center gap-1 cursor-pointer">
+                                        <input type="checkbox" id="sync-ai-api" checked
+                                            class="w-3 h-3 text-blue-600 rounded">
+                                        <span class="text-gray-700">AI API</span>
+                                    </label>
+                                    <label class="flex items-center gap-1 cursor-pointer">
+                                        <input type="checkbox" id="sync-evm-api" checked
+                                            class="w-3 h-3 text-blue-600 rounded">
+                                        <span class="text-gray-700">EVM API</span>
+                                    </label>
+                                    <label class="flex items-center gap-1 cursor-pointer">
+                                        <input type="checkbox" id="sync-sol-api" checked
+                                            class="w-3 h-3 text-blue-600 rounded">
+                                        <span class="text-gray-700">SOL API</span>
+                                    </label>
+                                    <label class="flex items-center gap-1 cursor-pointer">
+                                        <input type="checkbox" id="sync-cex-api" class="w-3 h-3 text-blue-600 rounded">
+                                        <span class="text-gray-700 text-orange-500">CEX API ⚠️</span>
+                                    </label>
+                                </div>
+                                <p class="text-xs text-orange-500 mt-1">⚠️ CEX API contains sensitive keys, not
+                                    recommended for sync</p>
+                            </div>
+
+                            <div class="text-xs text-gray-400 pt-2 border-t border-gray-200 space-y-1">
+                                <div class="flex justify-between">
+                                    <span><span data-i18n="localStorage">Local Storage</span>: <span
+                                            id="storage-total">Calculating...</span></span>
+                                    <span>Sync Storage: <span id="sync-storage-size">--</span></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-300">Extension ID: <span id="extension-id"
+                                            class="font-mono">--</span></span>
+                                    <button id="btn-force-sync" class="text-blue-600 hover:underline hidden"
+                                        data-i18n="forceSyncNow">
+                                        Force Sync Now
+                                    </button>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400" data-i18n="lastSynced">Last Synced:</span>
+                                    <span id="last-sync-time" class="text-gray-500">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== FOOTER (Always Visible) ==================== -->
+        <footer class="mt-12 py-8 border-t border-gray-200">
+            <div class="flex flex-col items-center gap-4">
+                <!-- Profile & Social -->
+                <div class="flex items-center gap-4">
+                    <img src="assets/x_me.jpg" alt="Profile" class="w-12 h-12 rounded-full border-2 border-gray-200">
+                    <div class="flex items-center gap-3">
+                        <a href="https://x.com/jiashu211" target="_blank"
+                            class="text-gray-400 hover:text-blue-500 transition">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                            </svg>
+                        </a>
+                        <a href="https://discord.gg/wJrRrP2Q" target="_blank"
+                            class="text-gray-400 hover:text-indigo-400 transition">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+                            </svg>
+                        </a>
+                        <a href="https://github.com/0xRabit/SmartFolio" target="_blank"
+                            class="text-gray-400 hover:text-white transition" title="Star us on GitHub">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" clip-rule="evenodd"
+                                    d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+                <!-- Buy Me a Coffee -->
+                <button id="btn-donate"
+                    class="px-6 py-2.5 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-lg text-sm font-medium hover:from-yellow-500 hover:to-orange-600 shadow-sm transition"
+                    data-i18n="buyMeCoffee">Buy me a coffee ☕</button>
+                <p class="text-xs text-gray-400">Made with ❤️ by @CryptoRabit</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Donation Modal -->
+    <div id="donation-modal"
+        class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center backdrop-blur-sm z-50">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm transform transition-all p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-900">☕ Buy Me a Coffee</h2>
+                <button id="btn-close-donate" class="text-gray-400 hover:text-gray-500">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Profile -->
+            <div class="flex items-center gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
+                <img src="assets/x_me.jpg" alt="Profile" class="w-16 h-16 rounded-full border-2 border-gray-200">
+                <div>
+                    <p class="font-semibold text-gray-800">@CryptoRabit</p>
+                    <div class="flex gap-2 mt-1">
+                        <a href="https://x.com/jiashu211" target="_blank" class="text-gray-500 hover:text-blue-500">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                            </svg>
+                        </a>
+                        <a href="https://discord.gg/wJrRrP2Q" target="_blank"
+                            class="text-gray-500 hover:text-indigo-400">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TipMe -->
+            <div class="mb-4">
+                <a href="https://tip.md/0xRabit" target="_blank" class="block">
+                    <img src="https://tip.md/badge.svg" alt="Tip in Crypto"
+                        class="h-10 mx-auto hover:opacity-80 transition">
+                </a>
+                <p class="text-xs text-gray-500 text-center mt-2">Tip with any crypto via tip.md</p>
+            </div>
+
+            <!-- Binance -->
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700 mb-2 text-center">🟡 Binance Pay</h3>
+                <div class="flex justify-center">
+                    <img src="assets/binance_qr_code.jpg" alt="Binance QR" class="w-32 h-32 rounded-lg border">
+                </div>
+                <p class="text-xs text-gray-500 text-center mt-2">Scan with Binance App</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div id="share-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <!-- Header -->
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        📊 Share Your Portfolio
+                    </h2>
+                    <button id="close-share-modal" class="text-gray-400 hover:text-gray-600 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Share Mode Selector (moved to top) -->
+                <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-xs text-gray-700 mb-2 font-medium">Share Mode</p>
+                    <div class="flex gap-2">
+                        <button id="mode-compact"
+                            class="mode-btn active flex-1 text-sm px-4 py-2.5 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition">
+                            Compact
+                        </button>
+                        <button id="mode-full"
+                            class="mode-btn flex-1 text-sm px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition">
+                            Full
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Screenshot Preview -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-sm text-gray-600 font-medium">Preview</p>
+                        <p id="clipboard-success"
+                            class="hidden text-xs text-green-600 font-medium flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Image copied! Ready to paste on social platforms
+                        </p>
+                    </div>
+                    <div id="screenshot-preview"
+                        class="border-2 border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center min-h-[200px]">
+                        <canvas id="share-canvas" class="max-w-full"></canvas>
+                    </div>
+                </div>
+
+                <!-- Generated Text -->
+                <div class="mb-4">
+                    <p class="text-sm text-gray-600 mb-2 font-medium">Share Text</p>
+                    <textarea id="share-text" readonly rows="4"
+                        class="w-full border border-gray-300 rounded-lg p-3 text-sm bg-gray-50 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                    <button id="copy-share-text"
+                        class="mt-2 text-xs text-purple-600 hover:text-purple-700 font-medium flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        Copy Text
+                    </button>
+                </div>
+
+                <!-- Share Buttons -->
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="share-twitter"
+                        class="flex items-center justify-center gap-2 px-4 py-3 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z">
+                            </path>
+                        </svg>
+                        Twitter/X
+                    </button>
+                    <button id="share-facebook"
+                        class="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z">
+                            </path>
+                        </svg>
+                        Facebook
+                    </button>
+                    <button id="share-whatsapp"
+                        class="flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z">
+                            </path>
+                        </svg>
+                        WhatsApp
+                    </button>
+                    <button id="share-download"
+                        class="flex items-center justify-center gap-2 px-4 py-3 bg-gray-700 text-white rounded-lg font-medium hover:bg-gray-800 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+
+</html>

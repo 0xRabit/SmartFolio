@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Build Output
+dist/
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment Variables
+.env
+.env.local
+
+# IDEs
+.vscode/
+.idea/
+
+# User Scratchpad
+tests/test.txt
+tests/ocr_test.js
+tests/solana_rpc_test.js
+# Maybe keep the test scripts if they are useful? 
+# The user seems to value them as part of the work. I will NOT ignore the JS test files, only the scratchpad txt.
+tests/test.txt
+smartfolio_extension.zip
+
+# Private Key (DO NOT COMMIT)
+key.pem
+*.zip

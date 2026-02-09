@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartFolio</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 400px;
+            height: 600px;
+            overflow: hidden;
+            background-color: #0f1419;
+            /* Match bottom bg */
+        }
+
+        /* Custom Scrollbar for WebKit */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            /* gray-700 */
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4B5563;
+            /* gray-600 */
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+    <script src="popup.js"></script>
+</body>
+
+</html>

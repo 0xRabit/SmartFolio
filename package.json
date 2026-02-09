@@ -1,0 +1,44 @@
+{
+    "name": "portfolio-plugin",
+    "version": "2.0.0",
+    "description": "Crypto portfolio dashboard extension",
+    "scripts": {
+        "build": "webpack --mode production",
+        "dev": "webpack --mode development --watch",
+        "build:release": "webpack --mode production && node scripts/prepare-release.js"
+    },
+    "dependencies": {
+        "@radix-ui/react-slot": "^1.2.4",
+        "@radix-ui/react-tabs": "^1.1.13",
+        "axios": "^1.6.5",
+        "chart.js": "^4.4.1",
+        "class-variance-authority": "^0.7.1",
+        "clsx": "^2.1.1",
+        "crypto-js": "^4.2.0",
+        "html2canvas": "^1.4.1",
+        "lucide-react": "^0.562.0",
+        "react": "^19.2.3",
+        "react-dom": "^19.2.3",
+        "tailwind-merge": "^3.4.0",
+        "tesseract.js": "^7.0.0",
+        "tweetnacl": "^1.0.3"
+    },
+    "devDependencies": {
+        "@types/chrome": "^0.1.33",
+        "@types/crypto-js": "^4.2.2",
+        "@types/react": "^19.2.8",
+        "@types/react-dom": "^19.2.3",
+        "autoprefixer": "^10.4.17",
+        "canvas": "^3.2.0",
+        "copy-webpack-plugin": "^11.0.0",
+        "css-loader": "^6.8.1",
+        "postcss": "^8.4.33",
+        "postcss-loader": "^7.3.4",
+        "style-loader": "^3.3.4",
+        "tailwindcss": "^3.4.1",
+        "ts-loader": "^9.5.4",
+        "typescript": "^5.9.3",
+        "webpack": "^5.89.0",
+        "webpack-cli": "^5.1.4"
+    }
+}

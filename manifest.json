@@ -1,0 +1,54 @@
+{
+    "manifest_version": 3,
+    "name": "SmartFolio",
+    "version": "2.0",
+    "description": "PRIVATE · UNIFIED · SMART - Crypto portfolio tracker with CEX/DEX balance aggregation.",
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvGvgltGSvh5jaBfQGPblLNxYsBkXzbzPURJAqr5xg2y3IzpKSEzkYzP6GF71IoHuns5cPpwjF7ajXI5JRj2FXf19KsHVNTfjlRORKi2vD3mgo/WAvdvxzby0j6dPCW8YIpfjIQpOuFGaM/umpwhWPg1rW+bsoHSbbr1VNPnFrGsADO4SxWbZPkPJqWvqtsgbO9esUFQpVIJWOE3I0n0Tl3c0r/8hP2eDZjrvZMDDKZHDcdccs62o6uWG4MEqgINZVl2rs1cbRWSIngwRn+xYTFfdFRf5+P/6tHnw/9Bza6OS4e0+7R7Ah2XWXL9g6U/IMjtemsXUkbHYkx4oFzWegwIDAQAB",
+    "permissions": [
+        "storage",
+        "tabs",
+        "activeTab"
+    ],
+    "host_permissions": [
+        "<all_urls>",
+        "https://debank.com/*",
+        "https://api.solscan.io/*",
+        "https://api.coingecko.com/*",
+        "https://www.bitstamp.net/*",
+        "https://api.etherscan.io/*",
+        "https://mempool.space/*",
+        "https://generativelanguage.googleapis.com/*",
+        "https://openrouter.ai/*",
+        "*://*.openai.com/*",
+        "*://*.anthropic.com/*",
+        "*://*.googleapis.com/*",
+        "https://api.binance.com/*",
+        "https://www.okx.com/*",
+        "https://api.bybit.com/*",
+        "https://api.bitget.com/*",
+        "https://api.backpack.exchange/*",
+        "https://api.siliconflow.cn/*",
+        "https://*.helius-rpc.com/*",
+        "https://api.helius.xyz/*",
+        "https://jup.ag/*"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "SmartFolio",
+        "default_icon": {
+            "16": "assets/icon16.png",
+            "32": "assets/icon32.png",
+            "48": "assets/icon48.png",
+            "128": "assets/icon128.png"
+        }
+    },
+    "icons": {
+        "16": "assets/icon16.png",
+        "32": "assets/icon32.png",
+        "48": "assets/icon48.png",
+        "128": "assets/icon128.png"
+    }
+}
