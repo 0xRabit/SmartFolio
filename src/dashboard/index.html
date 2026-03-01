@@ -79,6 +79,7 @@
                 <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
                     <img src="assets/icon48.png" alt="Logo" class="w-8 h-8">
                     <span data-i18n="appTitle">SmartFolio</span>
+                    <span id="app-version" class="text-xs font-medium text-gray-400 ml-1"></span>
                     <span
                         class="bg-gradient-to-r from-emerald-500 to-blue-600 bg-clip-text text-transparent text-sm font-bold ml-3 tracking-wider uppercase"
                         style="text-shadow: 0px 1px 2px rgba(0,0,0,0.05);">PRIVATE · UNIFIED · SMART</span>
@@ -98,8 +99,16 @@
                         Share
                     </button>
                     <button id="btn-update"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm transition"
-                        data-i18n="updateAll">Update All</button>
+                        class="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 shadow-sm transition inline-flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21.5 2v6h-6"></path>
+                            <path d="M2.5 22v-6h6"></path>
+                            <path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8"></path>
+                            <path d="M22 12.5a10 10 0 0 1-18.8 4.3L2.5 16"></path>
+                        </svg>
+                        Sync
+                    </button>
                 </div>
             </div>
             <!-- Tab Navigation -->
@@ -129,28 +138,9 @@
                         </div>
                     </div>
                     <p id="last-update-time" class="text-xs text-gray-400 text-center mt-2">Last updated: --</p>
-                    <!-- Chain Type Legend -->
-                    <div id="chain-legend" class="mt-4 grid grid-cols-2 gap-2 text-xs">
-                        <div class="flex items-center gap-2">
-                            <span class="w-3 h-3 rounded-full" style="background:#F7931A"></span>
-                            <span>BTC</span>
-                            <span id="legend-btc" class="text-gray-500 ml-auto">0 (0%)</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="w-3 h-3 rounded-full" style="background:#627EEA"></span>
-                            <span>EVM</span>
-                            <span id="legend-evm" class="text-gray-500 ml-auto">0 (0%)</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="w-3 h-3 rounded-full" style="background:#14F195"></span>
-                            <span>SOL</span>
-                            <span id="legend-sol" class="text-gray-500 ml-auto">0 (0%)</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="w-3 h-3 rounded-full" style="background:#8B5CF6"></span>
-                            <span>CEX</span>
-                            <span id="legend-cex" class="text-gray-500 ml-auto">0 (0%)</span>
-                        </div>
+                    <!-- Chain Type Legend (dynamically populated by chart_utils.js) -->
+                    <div id="chain-legend" class="mt-4 grid grid-cols-2 gap-1 text-xs">
+                        <!-- Populated by updateChart() -->
                     </div>
 
                     <!-- Portfolio Stats Cards (Popup-style) -->
@@ -468,6 +458,10 @@
                                     data-sort="balance" data-i18n="balance">
                                     Balance <span class="sort-icon ml-1">↓</span>
                                 </th>
+                                <th
+                                    class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Quantity
+                                </th>
                                 <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                                     data-sort="status" data-i18n="status">
                                     Status <span class="sort-icon ml-1">↕</span>
@@ -485,7 +479,7 @@
                         <tbody id="wallet-list-body" class="bg-white divide-y divide-gray-200">
                             <!-- Rows inserted by JS -->
                             <tr>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500" colspan="6">No wallets
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500" colspan="7">No wallets
                                     added. Please configure settings.</td>
                             </tr>
                         </tbody>
@@ -582,17 +576,118 @@
                         </div>
                         <div class="bg-blue-50 border border-blue-200 rounded-md px-3 py-2 mb-2">
                             <p class="text-xs text-gray-700 mb-1">
-                                <strong>Chain:</strong> <code class="text-xs bg-white px-1 py-0.5 rounded">evm</code>,
+                                <strong>Chain:</strong>
+                                <code class="text-xs bg-white px-1 py-0.5 rounded">evm</code>,
                                 <code class="text-xs bg-white px-1 py-0.5 rounded">sol</code>,
-                                <code class="text-xs bg-white px-1 py-0.5 rounded">btc</code>, or
+                                <code class="text-xs bg-white px-1 py-0.5 rounded">btc</code>,
+                                <code class="text-xs bg-white px-1 py-0.5 rounded">ltc</code>,
+                                <code class="text-xs bg-white px-1 py-0.5 rounded">doge</code>,
+                                <code class="text-xs bg-white px-1 py-0.5 rounded">ton</code>,
+                                <code class="text-xs bg-white px-1 py-0.5 rounded">sui</code>,
+                                <code class="text-xs bg-white px-1 py-0.5 rounded">apt</code>,
+                                <code class="text-xs bg-white px-1 py-0.5 rounded">avax</code>,
+                                <code class="text-xs bg-white px-1 py-0.5 rounded">atom</code>,
+                                <code class="text-xs bg-white px-1 py-0.5 rounded">ada</code>, or
                                 <code class="text-xs bg-white px-1 py-0.5 rounded">cex</code>
                             </p>
-                            <p class="text-xs text-gray-700">
+                            <p class="text-xs text-gray-700 mb-1">
                                 <strong>Type:</strong> <code class="text-xs bg-white px-1 py-0.5 rounded">hot</code>
                                 (default),
                                 <code class="text-xs bg-white px-1 py-0.5 rounded">cold</code>, or
                                 <code class="text-xs bg-white px-1 py-0.5 rounded">cex</code>
                             </p>
+                            <details class="mt-1">
+                                <summary class="text-xs text-blue-600 cursor-pointer font-medium">Address Format
+                                    Examples</summary>
+                                <div class="mt-1 text-xs text-gray-600 space-y-0.5 font-mono">
+                                    <p><strong>evm/avax:</strong> 0x + 40 hex chars</p>
+                                    <p><strong>sol:</strong> Base58, 32-44 chars</p>
+                                    <p><strong>btc:</strong> Starts with 1/3/bc1</p>
+                                    <p><strong>ltc:</strong> Starts with L/M/3/ltc1</p>
+                                    <p><strong>doge:</strong> Starts with D/A/9, 25-35 chars</p>
+                                    <p><strong>ton:</strong> Starts with EQ/UQ, 48 chars</p>
+                                    <p><strong>sui/apt:</strong> 0x + 64 hex chars</p>
+                                    <p><strong>atom:</strong> Starts with cosmos1 or cosmosvaloper1</p>
+                                    <p><strong>ada:</strong> Starts with addr1</p>
+                                </div>
+                            </details>
+                            <details class="mt-1">
+                                <summary class="text-xs text-blue-600 cursor-pointer font-medium">Balance Source
+                                    Reference</summary>
+                                <div class="mt-1 text-xs text-gray-600 font-mono overflow-x-auto">
+                                    <table class="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr class="border-b border-gray-200">
+                                                <th class="py-1 pr-3 font-semibold">Chain</th>
+                                                <th class="py-1 pr-3 font-semibold">Balance API</th>
+                                                <th class="py-1 font-semibold">Price</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-100">
+                                            <tr>
+                                                <td class="py-0.5 pr-3">btc</td>
+                                                <td class="py-0.5 pr-3">Mempool.space</td>
+                                                <td class="py-0.5">CoinGecko</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-0.5 pr-3">evm</td>
+                                                <td class="py-0.5 pr-3">Etherscan API / DeBank OCR</td>
+                                                <td class="py-0.5">CoinGecko / OCR</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-0.5 pr-3">sol</td>
+                                                <td class="py-0.5 pr-3">Helius RPC / Jup.ag OCR</td>
+                                                <td class="py-0.5">CoinGecko / OCR</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-0.5 pr-3">ltc</td>
+                                                <td class="py-0.5 pr-3">litecoinspace.org</td>
+                                                <td class="py-0.5">CoinGecko</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-0.5 pr-3">doge</td>
+                                                <td class="py-0.5 pr-3">BlockCypher</td>
+                                                <td class="py-0.5">CoinGecko</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-0.5 pr-3">ton</td>
+                                                <td class="py-0.5 pr-3">Toncenter</td>
+                                                <td class="py-0.5">CoinGecko</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-0.5 pr-3">sui</td>
+                                                <td class="py-0.5 pr-3">Sui RPC</td>
+                                                <td class="py-0.5">CoinGecko</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-0.5 pr-3">apt</td>
+                                                <td class="py-0.5 pr-3">Aptos API</td>
+                                                <td class="py-0.5">CoinGecko</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-0.5 pr-3">avax</td>
+                                                <td class="py-0.5 pr-3">Avalanche RPC</td>
+                                                <td class="py-0.5">CoinGecko</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-0.5 pr-3">atom</td>
+                                                <td class="py-0.5 pr-3">Cosmos LCD</td>
+                                                <td class="py-0.5">CoinGecko</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-0.5 pr-3">ada</td>
+                                                <td class="py-0.5 pr-3">Koios API</td>
+                                                <td class="py-0.5">CoinGecko</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-0.5 pr-3">cex</td>
+                                                <td class="py-0.5 pr-3">Exchange API</td>
+                                                <td class="py-0.5">Exchange</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </details>
                         </div>
                         <div class="flex gap-2 mb-2">
                             <input type="file" id="wallets-file-upload" accept=".csv,.txt"

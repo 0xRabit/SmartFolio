@@ -9,6 +9,14 @@ export const BITSTAMP_API = 'https://www.bitstamp.net/api/v2';
 
 // Chain APIs
 export const MEMPOOL_API = 'https://mempool.space/api';
+export const LITECOIN_SPACE_API = 'https://litecoinspace.org/api';
+export const BLOCKCYPHER_DOGE_API = 'https://api.blockcypher.com/v1/doge/main';
+export const TONCENTER_API = 'https://toncenter.com/api/v2';
+export const SUI_RPC = 'https://fullnode.mainnet.sui.io:443';
+export const APTOS_API = 'https://fullnode.mainnet.aptoslabs.com/v1';
+export const AVAX_RPC = 'https://api.avax.network/ext/bc/C/rpc';
+export const COSMOS_LCD = 'https://cosmos-rest.publicnode.com';
+export const KOIOS_API = 'https://api.koios.rest/api/v1';
 
 // CEX APIs
 export const BINANCE_API = 'https://api.binance.com';
@@ -43,6 +51,14 @@ export default {
     COINGECKO_API,
     BITSTAMP_API,
     MEMPOOL_API,
+    LITECOIN_SPACE_API,
+    BLOCKCYPHER_DOGE_API,
+    TONCENTER_API,
+    SUI_RPC,
+    APTOS_API,
+    AVAX_RPC,
+    COSMOS_LCD,
+    KOIOS_API,
     BINANCE_API,
     OKX_API,
     BYBIT_API,

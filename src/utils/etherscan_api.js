@@ -30,13 +30,23 @@ export async function getEtherscanBalance(address, apiKey) {
 
         // 2. Get ETH Price from CoinGecko
         const priceUrl = `${COINGECKO_API}/simple/price?ids=ethereum&vs_currencies=usd`;
-        const priceResponse = await axios.get(priceUrl, { timeout: 5000 });
-        const ethPrice = priceResponse.data.ethereum?.usd || 0;
+        let ethPrice = 0;
+        let priceError = null;
+        try {
+            const priceResponse = await axios.get(priceUrl, { timeout: 5000 });
+            if (priceResponse.status === 429 || priceResponse.data?.status?.error_code === 429) {
+                priceError = 'rate_limited';
+            } else {
+                ethPrice = priceResponse.data.ethereum?.usd || 0;
+            }
+        } catch (pe) {
+            priceError = pe.response?.status === 429 ? 'rate_limited' : 'fetch_error';
+        }
 
         const usdBalance = ethBalance * ethPrice;
         console.log(`Etherscan: ${address.slice(0, 10)}... = ${ethBalance.toFixed(4)} ETH ($${usdBalance.toFixed(2)})`);
 
-        return usdBalance;
+        return { usd: usdBalance, native: ethBalance, symbol: 'ETH', price_error: priceError };
 
     } catch (error) {
         console.error("Etherscan API Error:", error.message);

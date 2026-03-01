@@ -1,4 +1,9 @@
-import { getSolanaBalance, getColdWalletBalance, getBitcoinBalance } from '../utils/chain_api';
+import {
+    getSolanaBalance, getColdWalletBalance, getBitcoinBalance,
+    getLitecoinBalance, getDogecoinBalance, getTonBalance, getSuiBalance,
+    getAptosBalance, getAvaxBalance, getCosmosBalance, getCardanoBalance,
+    prefetchAllPrices
+} from '../utils/chain_api';
 import { getEtherscanBalance } from '../utils/etherscan_api';
 import { getCexBalance } from '../utils/cex_api';
 import { DEBANK_BASE_URL, JUP_BASE_URL, DEFAULT_SCREENSHOT_DELAY } from '../config.js';
@@ -64,22 +69,31 @@ async function startUpdateLoop() {
 
         broadcastStatus("Starting Update...", 0, wallets.length);
 
+        // Pre-fetch all coin prices in one batch call (CoinGecko → Binance fallback)
+        broadcastStatus("Fetching prices...", 0, wallets.length);
+        await prefetchAllPrices();
+
         for (let i = 0; i < wallets.length; i++) {
             const wallet = wallets[i];
             let balance = 0;
             let status = 'success';
 
+            // Normalize chain_type to lowercase for comparison
+            const chainType = (wallet.chain_type || '').toLowerCase();
+
             // Skip unknown chain types
-            if (wallet.chain_type !== 'evm' && wallet.chain_type !== 'sol' && wallet.chain_type !== 'btc' && wallet.chain_type !== 'cold wallet') {
+            const knownTypes = ['evm', 'sol', 'btc', 'cold wallet', 'ltc', 'doge', 'ton', 'sui', 'apt', 'avax', 'atom', 'ada'];
+            if (!knownTypes.includes(chainType)) {
                 console.warn("Unknown chain type:", wallet.chain_type);
-                status = 'skipped';
+                wallets[i].status = 'skipped';
+                await chrome.storage.local.set({ wallets });
                 continue;
             }
 
             broadcastStatus(`Processing ${wallet.address || wallet.chain_type}...`, i + 1, wallets.length);
 
             try {
-                if (wallet.chain_type === 'evm') {
+                if (chainType === 'evm') {
                     // Check EVM balance source setting
                     const evmSource = settings.evmSource || 'etherscan'; // Default to etherscan
 
@@ -100,7 +114,7 @@ async function startUpdateLoop() {
                         console.log(`OCR Result for ${wallet.address}:`, balance);
                     }
 
-                } else if (wallet.chain_type === 'sol') {
+                } else if (chainType === 'sol') {
                     // Check SOL balance source setting
                     const solSource = settings.solSource || 'helius'; // Default to helius
 
@@ -119,17 +133,56 @@ async function startUpdateLoop() {
                         console.log(`Jup.ag OCR Result for ${wallet.address}:`, balance);
                     }
 
-                } else if (wallet.chain_type === 'btc') {
+                } else if (chainType === 'btc') {
                     // Use new Mempool API
                     balance = await getBitcoinBalance(wallet.address);
 
-                } else if (wallet.chain_type === 'cold wallet') {
+                } else if (chainType === 'cold wallet') {
                     // Manual logic
                     balance = await getColdWalletBalance(wallet.remark, wallet.chain_type);
+
+                } else if (chainType === 'ltc') {
+                    balance = await getLitecoinBalance(wallet.address);
+
+                } else if (chainType === 'doge') {
+                    balance = await getDogecoinBalance(wallet.address);
+
+                } else if (chainType === 'ton') {
+                    balance = await getTonBalance(wallet.address);
+
+                } else if (chainType === 'sui') {
+                    balance = await getSuiBalance(wallet.address);
+
+                } else if (chainType === 'apt') {
+                    balance = await getAptosBalance(wallet.address);
+
+                } else if (chainType === 'avax') {
+                    balance = await getAvaxBalance(wallet.address);
+
+                } else if (chainType === 'atom') {
+                    balance = await getCosmosBalance(wallet.address);
+
+                } else if (chainType === 'ada') {
+                    balance = await getCardanoBalance(wallet.address);
                 }
 
                 // 3. Update Wallet State
-                wallets[i].balance = balance;
+                // balance can be a number (from OCR) or { usd, native, symbol, price_error } (from API)
+                if (typeof balance === 'object' && balance !== null && 'usd' in balance) {
+                    wallets[i].balance = balance.usd;
+                    wallets[i].native_balance = balance.native;
+                    wallets[i].native_symbol = balance.symbol;
+                    wallets[i].price_error = balance.price_error || null;
+                    // If price was rate-limited, mark status differently
+                    if (balance.price_error) {
+                        status = 'price_error';
+                    }
+                } else {
+                    wallets[i].balance = balance;
+                    wallets[i].native_balance = null;
+                    wallets[i].native_symbol = null;
+                    wallets[i].price_error = null;
+                }
                 wallets[i].last_updated = Date.now();
                 wallets[i].status = status;
 
@@ -140,8 +193,12 @@ async function startUpdateLoop() {
                 chrome.runtime.sendMessage({ action: "REFRESH_DATA" });
 
             } catch (error) {
-                console.error(`Error processing ${wallet.address}:`, error);
+                console.error(`Error processing ${wallet.address}:`, error.code || error.message);
                 wallets[i].status = 'error';
+                // Store short error msg for UI display
+                const msg = error.code === 'ECONNABORTED' ? 'timeout'
+                    : error.code || error.message?.slice(0, 30) || 'unknown';
+                wallets[i].error_msg = msg;
                 await chrome.storage.local.set({ wallets });
             }
         }

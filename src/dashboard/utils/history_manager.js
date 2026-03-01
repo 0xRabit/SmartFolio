@@ -46,7 +46,9 @@ export async function updateHistory(wallets) {
             address: w.address,
             chain_type: w.chain_type,
             remark: w.remark || '',
-            balance: w.balance || 0
+            balance: w.balance || 0,
+            native_balance: w.native_balance ?? null,
+            native_symbol: w.native_symbol || null
         });
         dailyTotal += (w.balance || 0);
     });
@@ -156,14 +158,15 @@ export async function exportHistoryToCSV() {
     }
 
     // JSON to CSV
-    const headers = ["Date", "Chain", "Address", "Remark", "Balance", "Source", "is_cold"];
+    const headers = ["Date", "Chain", "Address", "Remark", "Balance (USD)", "Quantity", "Symbol", "Source", "Storage Type"];
     const csvRows = [headers.join(",")];
 
     history.forEach(row => {
         // Determine source: API or Screenshot
         const chain = (row.chain_type || '').toLowerCase();
         const isCex = chain.includes('cex') || (row.remark || '').toLowerCase().includes('cex');
-        const isApiSource = isCex || chain === 'btc' || chain === 'bitcoin' || chain === 'evm' || chain === 'sol';
+        const apiChains = ['btc', 'bitcoin', 'ltc', 'doge', 'ton', 'sui', 'apt', 'avax', 'atom', 'ada', 'sol', 'evm'];
+        const isApiSource = isCex || apiChains.includes(chain);
         const source = isApiSource ? 'API' : 'Screenshot';
 
         // Determine storage type from wallet_type field
@@ -181,6 +184,8 @@ export async function exportHistoryToCSV() {
             row.address,
             `"${row.remark || ''}"`, // Quote remark in case of commas
             row.balance,
+            row.native_balance != null ? row.native_balance : '',
+            row.native_symbol || '',
             source,
             storageType
         ];

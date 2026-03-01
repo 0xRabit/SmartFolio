@@ -28,6 +28,14 @@ const ChainIcon: React.FC<{ chain: string }> = ({ chain }) => {
         'evm': { bg: '#627EEA', color: '#FFFFFF', symbol: 'Ξ' },
         'ethereum': { bg: '#627EEA', color: '#FFFFFF', symbol: 'Ξ' },
         'sol': { bg: '#14F195', color: '#000000', symbol: '◎' },
+        'ltc': { bg: '#345D9D', color: '#FFFFFF', symbol: 'Ł' },
+        'doge': { bg: '#C2A633', color: '#FFFFFF', symbol: 'Ð' },
+        'ton': { bg: '#0098EA', color: '#FFFFFF', symbol: '💎' },
+        'sui': { bg: '#4DA2FF', color: '#FFFFFF', symbol: 'S' },
+        'apt': { bg: '#2ED8A3', color: '#FFFFFF', symbol: 'A' },
+        'avax': { bg: '#E84142', color: '#FFFFFF', symbol: 'A' },
+        'atom': { bg: '#2E3148', color: '#FFFFFF', symbol: '⚛' },
+        'ada': { bg: '#0033AD', color: '#FFFFFF', symbol: '₳' },
         'binance': { bg: '#F0B90B', color: '#000000', symbol: 'B' },
         'okx': { bg: '#000000', color: '#FFFFFF', symbol: 'X' },
         'bybit': { bg: '#F7A600', color: '#000000', symbol: 'BY' },
@@ -145,12 +153,19 @@ const AssetsTab: React.FC<AssetsTabProps> = ({ wallets, totalBalance, lastUpdate
         allocation[type] = (allocation[type] || 0) + (w.balance || 0);
     });
 
-    // Colors for each chain type
     const chainColors: Record<string, string> = {
         'BTC': '#F7931A',
         'EVM': '#627EEA',
         'SOL': '#14F195',
         'CEX': '#8B5CF6',
+        'LTC': '#345D9D',
+        'DOGE': '#C2A633',
+        'TON': '#0098EA',
+        'SUI': '#4DA2FF',
+        'APT': '#2ED8A3',
+        'AVAX': '#E84142',
+        'ATOM': '#2E3148',
+        'ADA': '#0033AD',
     };
 
     // Calculate percentages

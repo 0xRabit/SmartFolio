@@ -132,7 +132,8 @@ export function createWalletRow(wallet) {
         : '--';
 
     const chain = (w.chain_type || '').toLowerCase();
-    const isApiSource = w.isCex || chain === 'btc' || chain === 'bitcoin';
+    const apiChains = ['btc', 'bitcoin', 'ltc', 'doge', 'ton', 'sui', 'apt', 'avax', 'atom', 'ada', 'sol', 'evm'];
+    const isApiSource = w.isCex || apiChains.includes(chain);
     const sourceEmoji = isApiSource ? '🔌' : '📸';
     const sourceTitle = isApiSource ? 'API' : 'Screenshot';
 
@@ -145,6 +146,23 @@ export function createWalletRow(wallet) {
     } else if (walletType === 'cold') {
         storageEmoji = '🧊';
         storageType = 'cold';
+    }
+
+    // Format native balance display
+    let quantityDisplay = '--';
+    if (w.native_balance != null && w.native_symbol) {
+        const nativeVal = w.native_balance;
+        if (nativeVal === 0) {
+            quantityDisplay = `0 ${w.native_symbol}`;
+        } else if (nativeVal < 0.0001) {
+            quantityDisplay = `${nativeVal.toExponential(2)} ${w.native_symbol}`;
+        } else if (nativeVal < 1) {
+            quantityDisplay = `${nativeVal.toFixed(6)} ${w.native_symbol}`;
+        } else if (nativeVal < 1000) {
+            quantityDisplay = `${nativeVal.toFixed(4)} ${w.native_symbol}`;
+        } else {
+            quantityDisplay = `${nativeVal.toLocaleString('en-US', { maximumFractionDigits: 2 })} ${w.native_symbol}`;
+        }
     }
 
     const tr = document.createElement('tr');
@@ -162,6 +180,7 @@ export function createWalletRow(wallet) {
             </div>
         </td>
         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">$${(w.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-500 text-right font-mono">${quantityDisplay}</td>
         <td class="px-4 py-3 whitespace-nowrap text-sm text-center">
             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
                 ${w.status || 'pending'}

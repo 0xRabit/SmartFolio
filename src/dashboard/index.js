@@ -124,6 +124,13 @@ function initCollapsibleGallery() {
 document.addEventListener('DOMContentLoaded', async () => {
     console.log("Dashboard initialized");
 
+    // Display version from manifest
+    const versionEl = document.getElementById('app-version');
+    if (versionEl) {
+        const manifest = chrome.runtime.getManifest();
+        versionEl.textContent = `v${manifest.version}`;
+    }
+
     // Init language dropdown
     const langSelect = document.getElementById('language-select');
 
@@ -541,7 +548,9 @@ btnUpdate.addEventListener('click', async () => {
 
     if (btnUpdate.disabled) return;
     btnUpdate.disabled = true;
-    btnUpdate.textContent = t('updateAll') + '...'; // Keep original text for consistency
+    // Preserve SVG icon in button
+    const syncSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"></path><path d="M2.5 22v-6h6"></path><path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8"></path><path d="M22 12.5a10 10 0 0 1-18.8 4.3L2.5 16"></path></svg>';
+    btnUpdate.innerHTML = syncSvg + ' Syncing...';
 
     console.log("Requesting update...");
 
@@ -592,7 +601,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         updateProgressText = '';
         updateCountdownText = '';
         btnUpdate.disabled = false;
-        btnUpdate.textContent = t('updateAll');
+        const syncSvgDone = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"></path><path d="M2.5 22v-6h6"></path><path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8"></path><path d="M22 12.5a10 10 0 0 1-18.8 4.3L2.5 16"></path></svg>';
+        btnUpdate.innerHTML = syncSvgDone + ' Sync';
         // Hide screenshot panel after completion
         const panel = document.getElementById('screenshot-panel');
         if (panel) panel.classList.add('hidden');
@@ -890,8 +900,24 @@ async function saveSettings() {
     }
 
     // Validate wallet parameters
-    const VALID_CHAIN_TYPES = ['evm', 'sol', 'btc', 'cex'];
+    const VALID_CHAIN_TYPES = ['evm', 'sol', 'btc', 'cex', 'ltc', 'doge', 'ton', 'sui', 'apt', 'avax', 'atom', 'ada', 'cold wallet'];
     const VALID_WALLET_TYPES = ['hot', 'cold', 'cex'];
+
+    // Address format validators per chain
+    const ADDRESS_VALIDATORS = {
+        evm: { regex: /^0x[0-9a-fA-F]{40}$/, hint: '0x + 40 hex chars' },
+        sol: { regex: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/, hint: 'Base58, 32-44 chars' },
+        btc: { regex: /^(1|3|bc1)[a-zA-HJ-NP-Z0-9]{25,62}$/, hint: 'Starts with 1/3/bc1' },
+        ltc: { regex: /^(L|M|3|ltc1)[a-zA-HJ-NP-Z0-9]{25,62}$/, hint: 'Starts with L/M/3/ltc1' },
+        doge: { regex: /^[DA9][1-9A-HJ-NP-Za-km-z]{24,34}$/, hint: 'Starts with D/A/9, 25-35 chars' },
+        ton: { regex: /^(EQ|UQ)[A-Za-z0-9_-]{46}$/, hint: 'Starts with EQ/UQ, 48 chars' },
+        sui: { regex: /^0x[0-9a-fA-F]{64}$/, hint: '0x + 64 hex chars' },
+        apt: { regex: /^0x[0-9a-fA-F]{64}$/, hint: '0x + 64 hex chars' },
+        avax: { regex: /^0x[0-9a-fA-F]{40}$/, hint: '0x + 40 hex chars (C-Chain)' },
+        atom: { regex: /^cosmos(valoper)?1[a-z0-9]{38,}$/, hint: 'Starts with cosmos1 or cosmosvaloper1' },
+        ada: { regex: /^addr1[a-z0-9]{50,}$/, hint: 'Starts with addr1' },
+    };
+
     const invalidWallets = [];
 
     wallets.forEach((w, index) => {
@@ -899,6 +925,12 @@ async function saveSettings() {
 
         if (!VALID_CHAIN_TYPES.includes(w.chain_type)) {
             errors.push(`invalid chain "${w.chain_type}"`);
+        } else {
+            // Validate address format if validator exists
+            const validator = ADDRESS_VALIDATORS[w.chain_type];
+            if (validator && w.address && !validator.regex.test(w.address)) {
+                errors.push(`address format error (expected: ${validator.hint})`);
+            }
         }
         if (!VALID_WALLET_TYPES.includes(w.wallet_type)) {
             errors.push(`invalid type "${w.wallet_type}"`);
@@ -930,7 +962,7 @@ async function saveSettings() {
         const errorLines = invalidWallets.map(w =>
             `Row ${w.row} (${w.address}): ${w.errors.join(', ')}`
         );
-        const errorMsg = `Invalid wallet parameters:\n${errorLines.join('\n')}\n\nValid chains: evm, sol, btc, cex\nValid types: hot, cold, cex`;
+        const errorMsg = `Invalid wallet parameters:\n${errorLines.join('\n')}\n\nValid chains: evm, sol, btc, ltc, doge, ton, sui, apt, avax, atom, ada, cex\nValid types: hot, cold, cex`;
 
         if (walletError) {
             walletError.textContent = errorMsg;
@@ -1040,7 +1072,7 @@ function renderTableSorted(wallets) {
     let latestUpdate = 0;
 
     if (wallets.length === 0) {
-        walletListBody.innerHTML = `<tr><td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500" colspan="5">No wallets added. Please configure settings.</td></tr>`;
+        walletListBody.innerHTML = `<tr><td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500" colspan="7">No wallets added. Please configure settings.</td></tr>`;
         document.getElementById('total-balance').textContent = '$0.00';
         return;
     }
@@ -1108,7 +1140,11 @@ function renderTableSorted(wallets) {
         const remarkDisplay = w.remark || 'Wallet';
         const statusClass = w.status === 'success' ? 'bg-green-100 text-green-800'
             : w.status === 'error' ? 'bg-red-100 text-red-800'
-                : 'bg-yellow-100 text-yellow-800';
+                : w.status === 'price_error' ? 'bg-orange-100 text-orange-800'
+                    : 'bg-yellow-100 text-yellow-800';
+        const statusText = w.status === 'price_error' ? 'price limited'
+            : w.status === 'error' && w.error_msg ? `error: ${w.error_msg}`
+                : (w.status || 'pending');
 
         // Updated with date and time
         const updatedTime = w.last_updated
@@ -1116,12 +1152,10 @@ function renderTableSorted(wallets) {
             : '--';
 
         // Determine source: API or Screenshot
-        // Screenshot = Debank (check from stored settings or chain type detection)
-        // API = CEX, BTC, or EVM/SOL with API source
+        // API chains always show 🔌 even on error; screenshot chains show 📸
         const chain = (w.chain_type || '').toLowerCase();
-        // For now: CEX and BTC always API, EVM/SOL depend on whether they use debank (screenshot)
-        // Since we don't have per-wallet source, assume: CEX/BTC = API, others show based on config
-        const isApiSource = w.isCex || chain === 'btc' || chain === 'bitcoin';
+        const apiChains = ['btc', 'ltc', 'doge', 'ton', 'sui', 'apt', 'avax', 'atom', 'ada'];
+        const isApiSource = w.isCex || w.native_balance != null || apiChains.includes(chain);
         const sourceEmoji = isApiSource ? '🔌' : '📸';
         const sourceTitle = isApiSource ? 'API' : 'Screenshot';
 
@@ -1146,6 +1180,23 @@ function renderTableSorted(wallets) {
             storageType = 'cold';
         }
 
+        // Format native balance display
+        let quantityDisplay = '--';
+        if (w.native_balance != null && w.native_symbol) {
+            const nativeVal = w.native_balance;
+            if (nativeVal === 0) {
+                quantityDisplay = `0 ${w.native_symbol}`;
+            } else if (nativeVal < 0.0001) {
+                quantityDisplay = `${nativeVal.toExponential(2)} ${w.native_symbol}`;
+            } else if (nativeVal < 1) {
+                quantityDisplay = `${nativeVal.toFixed(6)} ${w.native_symbol}`;
+            } else if (nativeVal < 1000) {
+                quantityDisplay = `${nativeVal.toFixed(4)} ${w.native_symbol}`;
+            } else {
+                quantityDisplay = `${nativeVal.toLocaleString('en-US', { maximumFractionDigits: 2 })} ${w.native_symbol}`;
+            }
+        }
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-medium capitalize">${chainDisplay}</td>
@@ -1161,9 +1212,10 @@ function renderTableSorted(wallets) {
                 </div>
             </td>
             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">$${(w.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+            <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-500 text-right font-mono">${quantityDisplay}</td>
             <td class="px-4 py-3 whitespace-nowrap text-sm text-center">
                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
-                    ${w.status || 'pending'}
+                    ${statusText}
                 </span>
             </td>
             <td class="px-4 py-3 whitespace-nowrap text-sm text-center" title="${sourceTitle}">

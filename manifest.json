@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "SmartFolio",
-    "version": "2.0",
+    "version": "2.3",
     "description": "PRIVATE · UNIFIED · SMART - Crypto portfolio tracker with CEX/DEX balance aggregation.",
     "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvGvgltGSvh5jaBfQGPblLNxYsBkXzbzPURJAqr5xg2y3IzpKSEzkYzP6GF71IoHuns5cPpwjF7ajXI5JRj2FXf19KsHVNTfjlRORKi2vD3mgo/WAvdvxzby0j6dPCW8YIpfjIQpOuFGaM/umpwhWPg1rW+bsoHSbbr1VNPnFrGsADO4SxWbZPkPJqWvqtsgbO9esUFQpVIJWOE3I0n0Tl3c0r/8hP2eDZjrvZMDDKZHDcdccs62o6uWG4MEqgINZVl2rs1cbRWSIngwRn+xYTFfdFRf5+P/6tHnw/9Bza6OS4e0+7R7Ah2XWXL9g6U/IMjtemsXUkbHYkx4oFzWegwIDAQAB",
     "permissions": [
@@ -30,7 +30,16 @@
         "https://api.siliconflow.cn/*",
         "https://*.helius-rpc.com/*",
         "https://api.helius.xyz/*",
-        "https://jup.ag/*"
+        "https://jup.ag/*",
+        "https://litecoinspace.org/*",
+        "https://api.blockcypher.com/*",
+        "https://toncenter.com/*",
+        "https://fullnode.mainnet.aptoslabs.com/*",
+        "https://api.avax.network/*",
+        "https://cosmos-rest.publicnode.com/*",
+        "https://api.koios.rest/*",
+        "https://guild.koios.rest/*",
+        "https://sui-rpc.publicnode.com/*"
     ],
     "background": {
         "service_worker": "background.js"

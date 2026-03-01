@@ -20,32 +20,40 @@ export function getCharts() {
  * @param {Array} wallets - Array of wallet objects
  */
 export function updateChart(wallets) {
+    // Chain color map - distinct brand colors for each chain
+    const CHAIN_COLORS = {
+        'BTC': '#F7931A',     // Bitcoin orange
+        'EVM': '#627EEA',     // Ethereum blue
+        'SOL': '#14F195',     // Solana green
+        'CEX': '#8B5CF6',     // Purple
+        'LTC': '#345D9D',     // Litecoin blue
+        'DOGE': '#C2A633',    // Dogecoin gold
+        'TON': '#0098EA',     // TON blue
+        'SUI': '#4DA2FF',     // SUI sky blue
+        'APT': '#2ED8A3',     // Aptos teal
+        'AVAX': '#E84142',    // Avalanche red
+        'ATOM': '#2E3148',    // Cosmos dark blue
+        'ADA': '#0033AD',     // Cardano blue
+        'COLD WALLET': '#9CA3AF', // Gray
+    };
+
     // Aggregate balances by chain type
     const aggregated = {};
-    const balances = { btc: 0, evm: 0, sol: 0, cex: 0 };
 
     wallets.forEach(w => {
-        const type = w.chain_type.toUpperCase();
+        let type;
+        if (w.isCex) {
+            type = 'CEX';
+        } else {
+            type = (w.chain_type || 'OTHER').toUpperCase();
+        }
         const balance = w.balance || 0;
         aggregated[type] = (aggregated[type] || 0) + balance;
-
-        // Aggregate by chain type for legend
-        const chain = (w.chain_type || '').toLowerCase();
-        if (w.isCex) balances.cex += balance;
-        else if (chain === 'btc' || chain === 'bitcoin') balances.btc += balance;
-        else if (chain === 'evm') balances.evm += balance;
-        else if (chain === 'sol') balances.sol += balance;
     });
 
     const labels = Object.keys(aggregated);
     const data = Object.values(aggregated);
-    const colors = labels.map(l => {
-        if (l === 'EVM') return '#627EEA';
-        if (l === 'SOL') return '#14F195';
-        if (l === 'BTC') return '#F7931A';
-        if (l === 'CEX') return '#8B5CF6';
-        return '#6B7280'; // Default gray
-    });
+    const colors = labels.map(l => CHAIN_COLORS[l] || '#6B7280');
 
     if (allocationChart) {
         allocationChart.data.labels = labels;
@@ -54,25 +62,35 @@ export function updateChart(wallets) {
         allocationChart.update();
     }
 
-    // Update chain legend with dollar values and percentages
-    const total = balances.btc + balances.evm + balances.sol + balances.cex;
-    const btcEl = document.getElementById('legend-btc');
-    const evmEl = document.getElementById('legend-evm');
-    const solEl = document.getElementById('legend-sol');
-    const cexEl = document.getElementById('legend-cex');
+    // Update chain legend dynamically
+    const total = data.reduce((s, v) => s + v, 0);
+    const legendContainer = document.getElementById('chain-legend');
+    if (legendContainer) {
+        legendContainer.innerHTML = '';
+        // Sort by balance descending
+        const sorted = labels.map((l, i) => ({ label: l, value: data[i], color: colors[i] }))
+            .sort((a, b) => b.value - a.value);
 
-    const formatLegend = (value) => {
-        const pct = total > 0 ? ((value / total) * 100).toFixed(0) : 0;
-        if (value >= 1000) {
-            return `$${(value / 1000).toFixed(1)}k (${pct}%)`;
-        }
-        return `$${value.toFixed(0)} (${pct}%)`;
-    };
-
-    if (btcEl) btcEl.textContent = formatLegend(balances.btc);
-    if (evmEl) evmEl.textContent = formatLegend(balances.evm);
-    if (solEl) solEl.textContent = formatLegend(balances.sol);
-    if (cexEl) cexEl.textContent = formatLegend(balances.cex);
+        sorted.forEach(item => {
+            const pct = total > 0 ? ((item.value / total) * 100).toFixed(0) : 0;
+            let valueStr;
+            if (item.value >= 1000000) {
+                valueStr = `$${(item.value / 1000000).toFixed(1)}M`;
+            } else if (item.value >= 1000) {
+                valueStr = `$${(item.value / 1000).toFixed(1)}k`;
+            } else {
+                valueStr = `$${item.value.toFixed(0)}`;
+            }
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2';
+            div.innerHTML = `
+                <span class="w-3 h-3 rounded-full flex-shrink-0" style="background:${item.color}"></span>
+                <span>${item.label}</span>
+                <span class="text-gray-500 ml-auto">${valueStr} (${pct}%)</span>
+            `;
+            legendContainer.appendChild(div);
+        });
+    }
 }
 
 /**

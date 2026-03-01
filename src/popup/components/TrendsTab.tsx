@@ -229,6 +229,14 @@ const TrendsTab: React.FC = () => {
         'btc': '#F7931A',
         'bitcoin': '#F7931A',
         'sol': '#14F195',
+        'ltc': '#345D9D',
+        'doge': '#C2A633',
+        'ton': '#0098EA',
+        'sui': '#4DA2FF',
+        'apt': '#2ED8A3',
+        'avax': '#E84142',
+        'atom': '#2E3148',
+        'ada': '#0033AD',
     };
     const defaultColors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
